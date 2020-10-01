@@ -48,28 +48,29 @@ def view_gamelog():
 # ========================== scoreboard fns ========================== #
 def create_scoreboard():
     c.execute("""CREATE TABLE IF NOT EXISTS scoreboard(
-                    id INTEGER PRIMARY KEY, 
+                    user_id INTEGER PRIMARY KEY, 
                     money FLOAT,
                     temp FLOAT,
                     Timestamp DATETIME DEFAULT CURRENT_TIMESTAMP)""") 
     add_score(123, 250, 1)
 
 def add_score(user_id, money, temp):
-    c.execute('INSERT INTO scoreboard(id, money, temp) VALUES (?,?,?)', (user_id, money, temp))
+    c.execute('INSERT INTO scoreboard(user_id, money, temp) VALUES (?,?,?)', (user_id, money, temp))
     conn.commit()
 
-def view_score(user_id):
-    c.execute(f'SELECT * FROM scoreboard WHERE id = {user_id} ORDER BY Timestamp DESC LIMIT 1')
+def view_score(user_id, limit=1):
+    c.execute(f'SELECT * FROM scoreboard WHERE user_id = {user_id} ORDER BY Timestamp DESC LIMIT {limit}')
     data = c.fetchall()
     return data
 # ==================================================================== #
-
 @st.cache
 def start_game():
     create_usertable()
     create_gamelog()
     create_scoreboard()
 
+#empty_db()
+# start_game()
 def main():
     """Boardgame App"""
     start_game()
@@ -168,7 +169,7 @@ def main():
 
     # ========================== score ============================== #
     st.text('\n')
-    for m in view_score(session_state.user_id):
+    for m in view_score(session_state.user_id, limit=10):
         st.text(f'{m}')
 
     # ========================== sidebar ============================== #

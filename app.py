@@ -48,7 +48,8 @@ def view_gamelog():
 # ========================== scoreboard fns ========================== #
 def create_scoreboard():
     c.execute("""CREATE TABLE IF NOT EXISTS scoreboard(
-                    user_id INTEGER PRIMARY KEY, 
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id INTEGER, 
                     money FLOAT,
                     temp FLOAT,
                     Timestamp DATETIME DEFAULT CURRENT_TIMESTAMP)""") 
@@ -113,6 +114,7 @@ def main():
 
         st.text(f"------------ q{session_state.q} -------------")
         q = session_state.q
+        add_score(session_state.user_id, session_state.money, session_state.temp)
 
         if q == 1:
             st.subheader("Do you wish to run for president?")
@@ -123,7 +125,6 @@ def main():
                 session_state.hp = session_state.hp - 1
                 session_state.temp = session_state.temp * 1.1
                 session_state.q = 2
-                add_score(session_state.user_id, session_state.money, session_state.temp)
                 st.button('Next')
 
         if q == 2:
@@ -167,28 +168,30 @@ def main():
             session_state.q = 5
             st.button('Next')
 
-    # ========================== score ============================== #
-    st.text('\n')
-    for m in view_score(session_state.user_id, limit=10):
-        st.text(f'{m}')
-
     # ========================== sidebar ============================== #
     if st.sidebar.button('reset'):
         session_state.q = 1
         session_state.money = 0
         session_state.hp = 100
         session_state.temp = 1.0
+        session_state.user_id = random.randint(0, 1e6)
     
     st.sidebar.title(f"💰 £{session_state.money}")
     st.sidebar.title(f"🌍 {session_state.hp}")
     st.sidebar.title(f"🌡️ {session_state.temp:0.2f}°")
 
+    df = pd.DataFrame(view_score(session_state.user_id, limit=10),
+                      columns=['a', 'b', 'c', 'd', 'e'])
+    st.sidebar.dataframe(df)
+
     #st.sidebar.markdown("---")
-    df = pd.DataFrame(np.random.randn(20, 3), columns=['a', 'b', 'c'])
+    #df = pd.DataFrame(np.random.randn(20, 3), columns=['a', 'b', 'c'])
     c = alt.Chart(df).mark_line().encode(
-        x='a', y='b', size='c', color='c')
+        x='a', y='d', size='b', color='b')
 
     st.sidebar.altair_chart(c, use_container_width=True)
+
+
 
 if __name__ == '__main__':
     main()

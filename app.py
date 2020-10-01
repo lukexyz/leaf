@@ -38,7 +38,7 @@ def view_all_users():
     data = c.fetchall()
     return data
 
-def view_log():
+def view_gamelog():
     c.execute('SELECT * FROM gamelog ORDER BY Timestamp DESC LIMIT 10')
     data = c.fetchall()
     return data
@@ -87,37 +87,31 @@ def main():
 
     elif choice == 'Planet Earth':
 
-        session_state = SessionState.get(user_name='', money=0, favorite_color='black')
-        st.text(session_state.user_name)
-        session_state.user_name = 'Mary'
-        st.text(session_state.favorite_color)
+        session_state = SessionState.get(money=0, hp=100)
+        st.text(session_state.money)
         money = session_state.money
 
         st.title("🌎 Welcome to Earth")
-
+        st.sidebar.title(f"💰 Wealth: £{money}")
         st.sidebar.title(f"🏃‍♂️ HP: {100}")
-        session_state.money = session_state.money + 250
 
         st.subheader("Do you wish to run for president?")
         if st.button('Yes'):
-            session_state.user_name = 'Luke'
-            st.text(session_state.user_name)
             st.text('Congratulations, you have won the race.\n\nWelcome Mr President.')
             st.text('You have recieved £250 from corporate lobbyists.')
+            session_state.money = session_state.money + 250
 
         st.subheader("What is your first policy agenda?")
         if st.button('Green new deal'):
             st.text('You have sealed the deal. (Economy shrinks. Lose £50)')
             money -= 50
             st.text(money)
-            st.sidebar.title(f"💰 Wealth: £{money}")
+
         if st.button('Open national reserves for oil exploration'):
             st.text('You have found a bountiful plateau of crude oil (Gain £20) ')
             money += 20
             st.balloons()
-        st.text('You have sealed the deal. (Economy shrinks. Lose £50)')
 
-        st.sidebar.title(f"💰 Wealth: £{money}")
 
 if __name__ == '__main__':
     main()

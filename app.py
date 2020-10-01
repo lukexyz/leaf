@@ -53,18 +53,19 @@ def main():
     """Boardgame App"""
     start_game()
 
-    menu = ["Planet Earth", "Chapter 2", "Chapter 3", "Chat Room", "Settings"]
+    menu = ["Planet Earth", "Chat Room", "Settings"]
     choice = st.sidebar.selectbox("Navigation", menu)
     players = []
     username = ''
 
+    session_state = SessionState.get(money=0, hp=100)
 
+
+    # ========================== chat room ============================== #
     if choice == "Chat Room":
         st.title("Chat Room")
-
         username = st.sidebar.text_input("User Name")
         st.text(f"hi {username}")
-
         if st.sidebar.checkbox("Start Playing!"):
             add_user(username)
             st.success(f"New User: {username}")
@@ -74,43 +75,43 @@ def main():
             for m in view_gamelog():
                 st.text(f'{m[3][-8:]} \t{m[1]}: {m[2]}')
 
-
+    # ========================== settings ============================== #
     elif choice == "Settings":
         st.title("Hacker Zone")
         st.subheader("empty DB and start new game")
-
-        if st.button('reset'):
+        if st.button('reset chatlog'):
             if st.button('really do it?'):
                 empty_db()
                 start_game()
 
-
+    # ========================== gameplay ==============================#
     elif choice == 'Planet Earth':
 
-        session_state = SessionState.get(money=0, hp=100)
-        st.text(session_state.money)
-        money = session_state.money
-
         st.title("🌎 Welcome to Earth")
-        st.sidebar.title(f"💰 Wealth: £{money}")
-        st.sidebar.title(f"🏃‍♂️ HP: {100}")
 
         st.subheader("Do you wish to run for president?")
         if st.button('Yes'):
             st.text('Congratulations, you have won the race.\n\nWelcome Mr President.')
             st.text('You have recieved £250 from corporate lobbyists.')
             session_state.money = session_state.money + 250
+            session_state.hp = session_state.hp - 1
 
         st.subheader("What is your first policy agenda?")
         if st.button('Green new deal'):
             st.text('You have sealed the deal. (Economy shrinks. Lose £50)')
-            money -= 50
-            st.text(money)
+            session_state.money = session_state.money - 50
+            session_state.hp = session_state.hp - 1
 
         if st.button('Open national reserves for oil exploration'):
             st.text('You have found a bountiful plateau of crude oil (Gain £20) ')
-            money += 20
-            st.balloons()
+            session_state.money = session_state.money + 20
+            session_state.hp = session_state.hp - 1
+
+    if st.sidebar.button('reset'):
+        session_state.money = 0
+        session_state.hp = 100
+    st.sidebar.title(f"💰 Wealth: £{session_state.money}")
+    st.sidebar.title(f"🏃‍♂️ HP: {session_state.hp}")
 
 
 if __name__ == '__main__':

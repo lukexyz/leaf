@@ -57,9 +57,7 @@ def main():
     choice = st.sidebar.selectbox("Navigation", menu)
     players = []
     username = ''
-
-    session_state = SessionState.get(money=0, hp=100)
-
+    session_state = SessionState.get(q=1, money=0, hp=100)
 
     # ========================== chat room ============================== #
     if choice == "Chat Room":
@@ -88,30 +86,53 @@ def main():
     elif choice == 'Planet Earth':
 
         st.title("🌎 Welcome to Earth")
+        st.text(f"------------ q{session_state.q} -------------")
 
-        st.subheader("Do you wish to run for president?")
-        if st.button('Yes'):
-            st.text('Congratulations, you have won the race.\n\nWelcome Mr President.')
-            st.text('You have recieved £250 from corporate lobbyists.')
-            session_state.money = session_state.money + 250
-            session_state.hp = session_state.hp - 1
+        q = session_state.q
 
-        st.subheader("What is your first policy agenda?")
-        if st.button('Green new deal'):
-            st.text('You have sealed the deal. (Economy shrinks. Lose £50)')
-            session_state.money = session_state.money - 50
-            session_state.hp = session_state.hp - 1
+        if q == 1:
+            st.subheader("Do you wish to run for president?")
+            if st.button('Yes'):
+                st.success('Congratulations, you have won the race!')
+                st.text('Welcome, President.\n\nYou have recieved £250 from corporate lobbyists.')
+                session_state.money = session_state.money + 250
+                session_state.hp = session_state.hp - 1
+                session_state.q = 2
+                st.button('Next')
 
-        if st.button('Open national reserves for oil exploration'):
-            st.text('You have found a bountiful plateau of crude oil (Gain £20) ')
-            session_state.money = session_state.money + 20
-            session_state.hp = session_state.hp - 1
+        if q == 2:
+            st.subheader("What is your first policy agenda?")
+            if st.button('💠 Green new deal'):
+                st.success('Congratulations! The Bill Has Passed!')
+                st.text('You take a deep breath of fresh air.\n\nThe FTSE100 remains stable.')
+                session_state.money = session_state.money - 50
+                session_state.hp = session_state.hp - 1
+                session_state.q = 3
+                st.button('Next')
+            if st.button('💠 Open national reserves for oil exploration'):
+                st.success('Your nation will be rich!')
+                st.text('You have found a bountiful plateau of crude oil (Gain £20)')
+                session_state.money = session_state.money + 20
+                session_state.hp = session_state.hp - 1
+                session_state.q = 3
+                st.button('Next')
+        
+        if q == 3:
+            st.error('WARNING!')
+            st.subheader("You've started a trade war.")
+            st.text('Your access to Chinese manufacturing is severly restricted.')
+            session_state.q = 4
+            st.button('Next')
 
     if st.sidebar.button('reset'):
+        session_state.q = 1
         session_state.money = 0
         session_state.hp = 100
+        
     st.sidebar.title(f"💰 Wealth: £{session_state.money}")
-    st.sidebar.title(f"🏃‍♂️ HP: {session_state.hp}")
+    st.sidebar.title(f"🌱 HP: {session_state.hp}")
+    st.sidebar.text(f"q{session_state.q}")
+
 
 
 if __name__ == '__main__':

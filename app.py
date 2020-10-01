@@ -1,8 +1,10 @@
 import streamlit as st
 import sqlite3
-import numpy as np
-import time
+import time, random
 import SessionState
+import numpy as np
+import pandas as pd
+import altair as alt
 
 # DB Management
 conn = sqlite3.connect('data.db')
@@ -23,7 +25,7 @@ def create_gamelog():
                     username TEXT, 
                     message TEXT,
                     Timestamp DATETIME DEFAULT CURRENT_TIMESTAMP)""")
-    add_gamelog('Admin', 'Welcome to the chatroom')                
+    add_gamelog('Admin', 'Welcome to the chatroom')
 
 def empty_db():
     c.execute('DROP TABLE IF EXISTS userstable')
@@ -43,11 +45,30 @@ def view_gamelog():
     data = c.fetchall()
     return data
 
-    
+# ========================== scoreboard fns ========================== #
+def create_scoreboard():
+    c.execute("""CREATE TABLE IF NOT EXISTS scoreboard(
+                    id INTEGER PRIMARY KEY, 
+                    money FLOAT,
+                    temp FLOAT,
+                    Timestamp DATETIME DEFAULT CURRENT_TIMESTAMP)""") 
+    add_score(123, 250, 1)
+
+def add_score(user_id, money, temp):
+    c.execute('INSERT INTO scoreboard(id, money, temp) VALUES (?,?,?)', (user_id, money, temp))
+    conn.commit()
+
+def view_score(user_id):
+    c.execute(f'SELECT * FROM scoreboard WHERE id = {user_id} ORDER BY Timestamp DESC LIMIT 1')
+    data = c.fetchall()
+    return data
+# ==================================================================== #
+
 @st.cache
 def start_game():
     create_usertable()
     create_gamelog()
+    create_scoreboard()
 
 def main():
     """Boardgame App"""
@@ -57,7 +78,8 @@ def main():
     choice = st.sidebar.selectbox("Navigation", menu)
     players = []
     username = ''
-    session_state = SessionState.get(q=1, money=0, hp=100)
+    user_id = random.randint(0, 1e6)
+    session_state = SessionState.get(user_id=user_id, q=1, money=0, hp=100, temp=1.0)
 
     # ========================== chat room ============================== #
     if choice == "Chat Room":
@@ -82,12 +104,13 @@ def main():
                 empty_db()
                 start_game()
 
-    # ========================== gameplay ==============================#
+    # ========================== gameplay ============================== #
     elif choice == 'Planet Earth':
 
         st.title("🌎 Welcome to Earth")
-        st.text(f"------------ q{session_state.q} -------------")
+        st.text(f'user id {session_state.user_id}')
 
+        st.text(f"------------ q{session_state.q} -------------")
         q = session_state.q
 
         if q == 1:
@@ -97,7 +120,9 @@ def main():
                 st.text('Welcome, President.\n\nYou have recieved £250 from corporate lobbyists.')
                 session_state.money = session_state.money + 250
                 session_state.hp = session_state.hp - 1
+                session_state.temp = session_state.temp * 1.1
                 session_state.q = 2
+                add_score(session_state.user_id, session_state.money, session_state.temp)
                 st.button('Next')
 
         if q == 2:
@@ -107,6 +132,7 @@ def main():
                 st.text('You take a deep breath of fresh air.\n\nThe FTSE100 remains stable.')
                 session_state.money = session_state.money - 50
                 session_state.hp = session_state.hp - 1
+                session_state.temp = session_state.temp * 1.1
                 session_state.q = 3
                 st.button('Next')
             if st.button('💠 Open national reserves for oil exploration'):
@@ -114,26 +140,54 @@ def main():
                 st.text('You have found a bountiful plateau of crude oil (Gain £20)')
                 session_state.money = session_state.money + 20
                 session_state.hp = session_state.hp - 1
+                session_state.temp = session_state.temp * 1.1
                 session_state.q = 3
                 st.button('Next')
         
         if q == 3:
             st.error('WARNING!')
-            st.subheader("You've started a trade war.")
-            st.text('Your access to Chinese manufacturing is severly restricted.')
+            st.subheader("The People's Repulic of China have started a trade war against you.")
+            st.text('Your access to manufacturing is severly restricted.')
+            session_state.temp = session_state.temp * 1.1
             session_state.q = 4
             st.button('Next')
+        
+        if q == 4:
+            st.subheader("Q4")
+            st.text('Subtext 4')
+            session_state.temp = session_state.temp * 1.1
+            session_state.q = 5
+            st.button('Next')
 
+        if q == 5:
+            st.subheader("Q5")
+            st.text('Subtext 5')
+            session_state.temp = session_state.temp * 1.1
+            session_state.q = 5
+            st.button('Next')
+
+    # ========================== score ============================== #
+    st.text('\n')
+    for m in view_score(session_state.user_id):
+        st.text(f'{m}')
+
+    # ========================== sidebar ============================== #
     if st.sidebar.button('reset'):
         session_state.q = 1
         session_state.money = 0
         session_state.hp = 100
-        
-    st.sidebar.title(f"💰 Wealth: £{session_state.money}")
-    st.sidebar.title(f"🌱 HP: {session_state.hp}")
-    st.sidebar.text(f"q{session_state.q}")
+        session_state.temp = 1.0
+    
+    st.sidebar.title(f"💰 £{session_state.money}")
+    st.sidebar.title(f"🌍 {session_state.hp}")
+    st.sidebar.title(f"🌡️ {session_state.temp:0.2f}°")
 
+    #st.sidebar.markdown("---")
+    df = pd.DataFrame(np.random.randn(20, 3), columns=['a', 'b', 'c'])
+    c = alt.Chart(df).mark_line().encode(
+        x='a', y='b', size='c', color='c')
 
+    st.sidebar.altair_chart(c, use_container_width=True)
 
 if __name__ == '__main__':
     main()

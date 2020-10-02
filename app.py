@@ -60,7 +60,7 @@ def add_score(user_id, money, temp):
     conn.commit()
 
 def view_score(user_id, limit=1):
-    c.execute(f'SELECT * FROM scoreboard WHERE user_id = {user_id} ORDER BY Timestamp DESC LIMIT {limit}')
+    c.execute(f'SELECT * FROM scoreboard WHERE user_id = {user_id} ORDER BY id DESC LIMIT {limit}')
     data = c.fetchall()
     return data
 # ==================================================================== #
@@ -114,9 +114,10 @@ def main():
 
         st.text(f"------------ q{session_state.q} -------------")
         q = session_state.q
-        add_score(session_state.user_id, session_state.money, session_state.temp)
+        
 
         if q == 1:
+            add_score(session_state.user_id, session_state.money, session_state.temp)
             st.subheader("Do you wish to run for president?")
             if st.button('Yes'):
                 st.success('Congratulations, you have won the race!')
@@ -126,6 +127,7 @@ def main():
                 session_state.temp = session_state.temp * 1.1
                 session_state.q = 2
                 st.button('Next')
+                add_score(session_state.user_id, session_state.money, session_state.temp)
 
         if q == 2:
             st.subheader("What is your first policy agenda?")
@@ -137,6 +139,7 @@ def main():
                 session_state.temp = session_state.temp * 1.1
                 session_state.q = 3
                 st.button('Next')
+                add_score(session_state.user_id, session_state.money, session_state.temp)
             if st.button('💠 Open national reserves for oil exploration'):
                 st.success('Your nation will be rich!')
                 st.text('You have found a bountiful plateau of crude oil (Gain £20)')
@@ -145,6 +148,7 @@ def main():
                 session_state.temp = session_state.temp * 1.1
                 session_state.q = 3
                 st.button('Next')
+                add_score(session_state.user_id, session_state.money, session_state.temp)
         
         if q == 3:
             st.error('WARNING!')
@@ -153,6 +157,7 @@ def main():
             session_state.temp = session_state.temp * 1.1
             session_state.q = 4
             st.button('Next')
+            add_score(session_state.user_id, session_state.money, session_state.temp)
         
         if q == 4:
             st.subheader("Q4")
@@ -160,6 +165,7 @@ def main():
             session_state.temp = session_state.temp * 1.1
             session_state.q = 5
             st.button('Next')
+            add_score(session_state.user_id, session_state.money, session_state.temp)
 
         if q == 5:
             st.subheader("Q5")
@@ -167,6 +173,7 @@ def main():
             session_state.temp = session_state.temp * 1.1
             session_state.q = 5
             st.button('Next')
+            add_score(session_state.user_id, session_state.money, session_state.temp)
 
     # ========================== sidebar ============================== #
     if st.sidebar.button('reset'):
@@ -182,15 +189,24 @@ def main():
 
     df = pd.DataFrame(view_score(session_state.user_id, limit=10),
                       columns=['a', 'b', 'c', 'd', 'e'])
-    st.sidebar.dataframe(df)
+    df['d'] = df['d'].round(2)
+    #st.sidebar.dataframe(df)
 
-    #st.sidebar.markdown("---")
-    #df = pd.DataFrame(np.random.randn(20, 3), columns=['a', 'b', 'c'])
-    c = alt.Chart(df).mark_line().encode(
-        x='a', y='d', size='b', color='b')
+    alt.renderers.set_embed_options(actions=False)
+    chart = alt.Chart(df).mark_line().encode(
+                alt.X('a', axis=None),
+                alt.Y('d', axis=None),
+                color=alt.Color('b', legend=None)
+                ).configure_view(strokeOpacity=0)
 
-    st.sidebar.altair_chart(c, use_container_width=True)
+    labels = chart.mark_text(
+                align='left',
+                baseline='middle',
+                dx=7
+                ).encode(text='d')
 
+    #c = (chart + labels)
+    st.sidebar.altair_chart(chart, use_container_width=True)
 
 
 if __name__ == '__main__':

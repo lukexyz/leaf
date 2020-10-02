@@ -70,8 +70,6 @@ def start_game():
     create_gamelog()
     create_scoreboard()
 
-#empty_db()
-# start_game()
 def main():
     """Boardgame App"""
     start_game()
@@ -110,8 +108,6 @@ def main():
     elif choice == 'Planet Earth':
 
         st.title("🌎 Welcome to Earth")
-        # st.text(f'user id {session_state.user_id}')
-
         st.text(f"------------ q{session_state.q} -------------")
         q = session_state.q
         
@@ -129,7 +125,6 @@ def main():
                 add_score(session_state.user_id, session_state.money, session_state.temp)
 
         if q == 2:
-            
             st.subheader("What is your first policy?")
             if st.button('💠 Green new deal'):
                 st.success('Congratulations! The Bill Has Passed!')

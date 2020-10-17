@@ -11,6 +11,12 @@ def create_df(size):
         columns=(f'col{i}' for i in range(size[1])))
     return df
 
+# Custom component
+def st_calculator(calc_html, width=500, height=500):
+    calc_file = codecs.open(calc_html, 'r')
+    page = calc_file.read()
+    stc.html(page, width=width, height=height, scrolling=False)
+
 def main():
     """A calculator app with Streamlit components"""
 
@@ -23,30 +29,30 @@ def main():
     # ================== Using st.beta_columns ================== #
     col1, col2 = st.beta_columns([3, 1]) # first column 3x the size of second
 
-
     choice = "Simple"
 
     with col2:  # Need to run selections first!
         choice = st.radio("", ["Simple", "Advanced"])
 
     with col1:
-        if choice == "Advanced":
+        if choice == "Simple":
+            st.header("📺 Simple Calculator")
+            st_calculator(calc_html='html/simple_calc.html')
+    
+        elif choice == "Advanced":
             st.header("📠 Advanced Calculator")
 
-        elif choice == "Simple":
-            st.header("📺 Simple Calculator")
-    
-        st.subheader("random dataframe")
+    st.subheader("random dataframe")
 
-        # ================== Mutate data with st.table() ================== #
+    # ================== Mutate data with st.table() ================== #
 
-        df1 = create_df(size=(1,5))
-        my_table = st.table(df1)
+    df1 = create_df(size=(1,5))
+    my_table = st.table(df1)
 
-        if st.button('add rows'):
-            df2 = pd.DataFrame(np.random.randn(3, 5),
-                        columns=(f'col{i}' for i in range(5)))
-            my_table.add_rows(df2)
+    if st.button('add rows'):
+        df2 = pd.DataFrame(np.random.randn(3, 5),
+                    columns=(f'col{i}' for i in range(5)))
+        my_table.add_rows(df2)
 
 
 

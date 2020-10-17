@@ -1,0 +1,167 @@
+<!--
+================== Streamlit Custom HTML Function =================
+
+    1. Copy html to top of the file
+    2. Add css in script tag
+
+        <style type="text/css" media="screen">
+            // insert css here 
+        </style>
+
+    3. Add js in script tag
+
+        <script type="text/javascript">
+            // insert js here 
+        </script>
+
+    4. Import into app.py as custom streamlit component: i.e.
+
+        import streamlit.components.v1 as stc 
+        def st_calculator(calc_html, width=500, height=500):
+            calc_file = codecs.open(calc_html, 'r')
+            page = calc_file.read()
+            stc.html(page, width=width, height=height, scrolling=False)
+        
+        st_calculator(calc_html='html/simple_calc.html')
+
+===================================================================
+-->
+
+
+<!-- Anna Selezniova: Webcam capture https://codepen.io/askd/pen/OBqJGP -->
+
+<div class="container">
+    <canvas id="webcam"></canvas>
+    <canvas id="detector"></canvas>
+  </div>
+  <div id="result">
+    <div class="icon icon_yes"></div>
+    <div class="icon icon_no"></div>
+  </div>
+
+
+
+<style type="text/css" media="screen">
+body {
+  display: flex;
+}
+.container {
+  position: relative;
+}
+#detector {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+#result {
+  width: 320px;
+}
+.icon {
+  position: relative;
+  margin: auto;
+  width: 240px;
+  height: 240px;
+  border-radius: 50%;
+  background-size: 50% 50%;
+  background-position: 50% 50%;
+  background-repeat: no-repeat;
+}
+.icon_yes {
+  display: none;
+  background-color: #090;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 32 32' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M16 7c-6 0-11.2 3.8-13 9 1.8 5.2 7 9 13 9s11.2-3.8 13-9c-1.8-5.2-7-9-13-9z' fill='none' stroke='%23fff' stroke-linecap='round' stroke-linejoin='round' stroke-miterlimit='10' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' fill='none' r='5' stroke='%23fff' stroke-linecap='round' stroke-linejoin='round' stroke-miterlimit='10' stroke-width='2'/%3E%3C/svg%3E");
+}
+.icon_no {
+  background-color: #c00;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 32 32' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M16 7c-6 0-11.2 3.8-13 9 1.8 5.2 7 9 13 9s11.2-3.8 13-9c-1.8-5.2-7-9-13-9z' fill='none' stroke='%23fff' stroke-linecap='round' stroke-linejoin='round' stroke-miterlimit='10' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' fill='none' r='5' stroke='%23fff' stroke-linecap='round' stroke-linejoin='round' stroke-miterlimit='10' stroke-width='2'/%3E%3Cpath fill='none' stroke='%23fff' stroke-linecap='round' stroke-linejoin='round' stroke-miterlimit='10' stroke-width='2' d='M3 3l26 26'/%3E%3C/svg%3E");
+}
+#result.active .icon_yes {
+  display: block;
+}
+#result.active .icon_no {
+  display: none;
+}
+</style>
+
+
+<script type="text/javascript">
+navigator.getUserMedia  = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
+
+if (!navigator.getUserMedia) {
+  // webcam not supported
+} else {
+  const scale = 0.5;
+
+  let width = 0;
+  let height = 0;
+  let loopFrame = null;
+  let track = null;
+
+  const result = document.getElementById('result');
+
+  const webcamCanvas = document.getElementById('webcam');
+  const webcamCtx = webcamCanvas.getContext('2d');
+
+  const detectorCanvas = document.getElementById('detector');
+  const detectorCtx = detectorCanvas.getContext('2d');
+
+  const video = document.createElement('video');
+  video.setAttribute('autoplay',true);
+
+  const getWebcam = () => {
+    navigator.getUserMedia(
+      { video: true, audio: false },
+      (stream) => {
+        video.srcObject = stream;
+        track = stream.getTracks()[0];
+      },
+      (e) => {
+        console.error(e);
+      }
+    );
+  }
+
+  const loop = () => {
+    loopFrame = requestAnimationFrame(loop);
+
+    webcamCtx.save();
+    webcamCtx.scale(-1, 1);
+    webcamCtx.drawImage(video, 0, 0, -width, height);
+    webcamCtx.restore();
+  }
+
+  const detectFace = () => {
+    if (!window.FaceDetector) return;
+
+    const faceDetector = new FaceDetector();
+    faceDetector.detect(webcamCanvas).then(faces => {
+      result.classList[faces.length ? 'add' : 'remove']('active');
+      detectorCtx.clearRect(0, 0, width, height);
+      detectorCtx.beginPath();
+      detectorCtx.lineWidth = 3;
+      detectorCtx.strokeStyle = 'lime';
+      detectorCtx.setLineDash([5]);
+      for (let i = 0; i < faces.length; i++) {
+        const face = faces[i].boundingBox;
+        detectorCtx.rect(Math.floor(face.x), Math.floor(face.y), Math.floor(face.width), Math.floor(face.height));
+        detectorCtx.stroke();
+      }
+    }).catch((e) => {
+      console.error(e);
+    })
+  }
+
+  getWebcam();
+
+  video.addEventListener('loadedmetadata', () => {
+    width = video.videoWidth * scale;
+    height = video.videoHeight * scale;
+    webcamCanvas.width = width;
+    webcamCanvas.height = height;
+    detectorCanvas.width = width;
+    detectorCanvas.height = height;
+    loopFrame = loopFrame || requestAnimationFrame(loop);
+    setInterval(() => requestAnimationFrame(detectFace), 500);
+  });
+}
+</script>

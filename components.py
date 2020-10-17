@@ -12,8 +12,12 @@ def create_df(size):
     return df
 
 # Custom component
-def st_calculator(calc_html, width=500, height=500):
-    calc_file = codecs.open(calc_html, 'r')
+def html_component(path, width=500, height=500):
+    """ 
+    Custom component to open hmtl with codecs util
+            path = "html/stream_video.html"
+    """
+    calc_file = codecs.open(path, 'r')
     page = calc_file.read()
     stc.html(page, width=width, height=height, scrolling=False)
 
@@ -36,11 +40,13 @@ def main():
 
     with col1:
         if choice == "Simple":
-            st.header("📺 Simple Calculator")
-            st_calculator(calc_html='html/simple_calc.html')
+            st.header("📠 Simple Calculator")
+            html_component(path="html/simple_calc.html")
+            
     
         elif choice == "Advanced":
-            st.header("📠 Advanced Calculator")
+            st.header("📺 Video Stream")
+            html_component(path="html/stream_video.html")
 
     st.subheader("random dataframe")
 

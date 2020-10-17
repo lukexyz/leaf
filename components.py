@@ -46,7 +46,7 @@ def main():
     
         elif choice == "Advanced":
             st.header("📺 Video Stream")
-            html_component(path="html/stream_video.html")
+            html_component(path="html/webcam2.html", width=500, height=800)
 
     st.subheader("random dataframe")
 
